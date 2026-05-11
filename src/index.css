@@ -110,3 +110,29 @@ All colors MUST be HSL.
     @apply bg-background text-foreground;
   }
 }
+
+/* ── Low-Data Mode Styles ─────────────────────────────────────────────────── */
+[low-data-mode="true"] img,
+[low-data-mode="true"] .illustration {
+  display: none !important;
+}
+
+[low-data-mode="true"] * {
+  animation: none !important;
+  transition: none !important;
+}
+
+[low-data-mode="true"] .bg-gradient-to-r,
+[low-data-mode="true"] .bg-gradient-to-br,
+[low-data-mode="true"] .bg-gradient-to-tr {
+  background: hsl(var(--muted)) !important;
+}
+
+[low-data-mode="true"] .shadow-xl, 
+[low-data-mode="true"] .shadow-2xl,
+[low-data-mode="true"] .shadow-lg {
+  box-shadow: none !important;
+  border: 1px solid hsl(var(--border));
+}
+/* ──────────────────────────────────────────────────────────────────────────── */
+

@@ -3,12 +3,14 @@ import { Outlet } from "react-router-dom";
 import { AppSidebar } from "./AppSidebar";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useTheme } from "@/contexts/ThemeContext";
-import { Moon, Sun } from "lucide-react";
+import { Moon, Sun, Languages, ZapOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import AIChatbot from "@/components/AIChatbot";
+import { useSettings } from "@/contexts/SettingsContext";
 
 const AppLayout = () => {
   const { theme, toggleTheme } = useTheme();
+  const { language, setLanguage, lowDataMode, toggleLowDataMode } = useSettings();
 
   return (
     <div className="min-h-screen flex w-full bg-background">
@@ -26,6 +28,28 @@ const AppLayout = () => {
           
           {/* Right side actions */}
           <div className="flex items-center gap-2">
+            {/* Language Toggle */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setLanguage(language === 'en' ? 'hi' : 'en')}
+              className="flex items-center gap-2 px-3 text-xs font-semibold"
+            >
+              <Languages className="w-4 h-4 text-indigo-500" />
+              {language.toUpperCase()}
+            </Button>
+
+            {/* Low Data Toggle */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleLowDataMode}
+              className={`hover:bg-muted ${lowDataMode ? 'text-amber-500' : 'text-slate-400'}`}
+              title="Toggle Low-Data Mode"
+            >
+              <ZapOff className="w-4 h-4" />
+            </Button>
+
             {/* Dark Mode Toggle */}
             <Button
               variant="ghost"

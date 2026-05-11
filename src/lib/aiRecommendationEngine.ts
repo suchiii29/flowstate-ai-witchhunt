@@ -3,8 +3,14 @@ import OpenAI from "openai";
 
 
 
+const apiKey = import.meta.env.VITE_GROQ_API_KEY;
+
+if (!apiKey) {
+  console.warn("⚠️ VITE_GROQ_API_KEY is missing from environment variables.");
+}
+
 const client = new OpenAI({
-  apiKey: import.meta.env.VITE_GROQ_API_KEY || "missing",
+  apiKey: apiKey || "missing",
   baseURL: "https://api.groq.com/openai/v1",
   dangerouslyAllowBrowser: true,
 });

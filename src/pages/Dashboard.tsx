@@ -29,6 +29,9 @@ import {
   Zap,
   Bell,
   X,
+  ChevronDown,
+  ChevronUp,
+  Brain,
 } from "lucide-react";
 import { db } from "@/firebase";
 import { ref, onValue } from "firebase/database";
@@ -37,6 +40,25 @@ import { useNavigate } from "react-router-dom";
 import AddTaskModal from "@/components/tasks/AddTaskModal";
 import AddLogModal from "@/components/AddLogModal";
 import { addTaskStore, initTaskStore } from "@/lib/taskStore";
+// ── AI Study Plan feature ───────────────────────────────────────────────────
+import StudyPlanForm from "@/features/study-plan/StudyPlanForm";
+import StudyPlanView from "@/features/study-plan/StudyPlanView";
+import { useSettings } from "@/contexts/SettingsContext";
+import {
+  generateStudyPlan,
+  saveStudyPlan,
+  loadStudyPlan,
+} from "@/features/study-plan/studyPlanService";
+import type { StudyPlanState, StudyPlanInput } from "@/features/study-plan/types";
+// ── End-of-Day Reflection feature ──────────────────────────────────────────
+import ReflectionForm from "@/features/reflection/ReflectionForm";
+import ReflectionView from "@/features/reflection/ReflectionView";
+import { getAIReflectionFeedback } from "@/features/reflection/reflectionService";
+import { saveReflection, getLatestReflection } from "@/features/reflection/reflectionStore";
+import type { ReflectionInput, ReflectionEntry } from "@/features/reflection/types";
+import { ref as dbRef, get as dbGet } from "firebase/database";
+// ────────────────────────────────────────────────────────────────────────────
+// ────────────────────────────────────────────────────────────────────────────
 
 interface RoutineLog {
   date: string;
@@ -62,6 +84,7 @@ const ASSET_URL = "/student.png";
 const Dashboard: React.FC = () => {
   const { uid, isLoggedIn } = useAuth();
   const navigate = useNavigate();
+  const { t } = useSettings();
   const [logs, setLogs] = useState<RoutineLog[]>([]);
   const [goals, setGoals] = useState<Goal[]>([]);
   const [trendData, setTrendData] = useState<{ date: string; score: number }[]>([]);
@@ -69,6 +92,19 @@ const Dashboard: React.FC = () => {
   const [addLogOpen, setAddLogOpen] = useState(false);
   const [notifications, setNotifications] = useState<string[]>([]);
   const [showNotifications, setShowNotifications] = useState(false);
+  // ── AI Study Plan state ──────────────────────────────────────────────────
+  const [studyPlanState, setStudyPlanState] = useState<StudyPlanState>({
+    status: "idle",
+    plan: null,
+    errorMessage: null,
+  });
+  const [studyPlanOpen, setStudyPlanOpen] = useState(true);
+  // ── End-of-Day Reflection state ──────────────────────────────────────────
+  const [reflectionLoading, setReflectionLoading] = useState(false);
+  const [currentReflection, setCurrentReflection] = useState<ReflectionEntry | null>(null);
+  const [streak, setStreak] = useState(0);
+  // ─────────────────────────────────────────────────────────────────────────
+  // ─────────────────────────────────────────────────────────────────────────
 
   // Redirect if not logged in
   useEffect(() => {
@@ -83,6 +119,81 @@ const Dashboard: React.FC = () => {
       initTaskStore(uid);
     }
   }, [uid]);
+
+  // Restore the last generated study plan from localStorage on first mount.
+  useEffect(() => {
+    const saved = loadStudyPlan();
+    if (saved) {
+      setStudyPlanState({ status: "success", plan: saved, errorMessage: null });
+    }
+  }, []);
+
+  // Restore latest reflection and streak on mount
+  useEffect(() => {
+    if (!uid) return;
+    
+    // Get latest reflection
+    getLatestReflection(uid).then(setCurrentReflection);
+    
+    // Get streak from profile
+    const profileRef = dbRef(db, `users/${uid}/profile/reflectionStreak`);
+    dbGet(profileRef).then(snap => {
+      if (snap.exists()) setStreak(snap.val());
+    });
+  }, [uid]);
+
+  const handleReflectionSubmit = async (data: ReflectionInput) => {
+    if (!uid) return;
+    setReflectionLoading(true);
+    try {
+      // Get AI feedback
+      const aiFeedback = await getAIReflectionFeedback(data);
+      
+      const entry: ReflectionEntry = {
+        ...data,
+        date: new Date().toISOString().split('T')[0],
+        aiFeedback,
+        timestamp: Date.now()
+      };
+      
+      // Save to Firebase
+      const savedEntry = await saveReflection(uid, entry);
+      setCurrentReflection(savedEntry);
+      
+      // Update local streak (optimistic)
+      setStreak(prev => prev + 1);
+    } catch (err: any) {
+      console.error("Reflection error:", err);
+      const msg = err?.message === "API Key missing" 
+        ? "AI key missing in .env. Please add VITE_GROQ_API_KEY."
+        : "Failed to save reflection. Please try again.";
+      alert(msg);
+    } finally {
+      setReflectionLoading(false);
+    }
+  };
+
+  // Handler: generate a new plan from the form values.
+  const handleGeneratePlan = async (input: StudyPlanInput) => {
+    setStudyPlanState({ status: "loading", plan: null, errorMessage: null });
+    try {
+      const plan = await generateStudyPlan(input);
+      saveStudyPlan(plan); // persist so a page refresh keeps the plan
+      setStudyPlanState({ status: "success", plan, errorMessage: null });
+    } catch (err: any) {
+      setStudyPlanState({
+        status: "error",
+        plan: null,
+        errorMessage: err?.message ?? "Something went wrong. Please try again.",
+      });
+    }
+  };
+
+  // Handler: clear plan from state + localStorage, show form again.
+  const handleClearPlan = () => {
+    saveStudyPlan(null);
+    setStudyPlanState({ status: "idle", plan: null, errorMessage: null });
+  };
 
   // Load routine logs for current user only
   useEffect(() => {
@@ -377,10 +488,10 @@ const Dashboard: React.FC = () => {
                 />
                 <div>
                   <h1 className="text-2xl md:text-3xl font-extrabold leading-tight">
-                    Dashboard
+                    {t('welcomeTitle')}
                   </h1>
                   <p className="text-muted-foreground mt-1 text-sm md:text-base">
-                    Your productivity overview
+                    {t('welcomeSub')}
                   </p>
                 </div>
               </div>
@@ -470,7 +581,7 @@ const Dashboard: React.FC = () => {
                 onClick={handleGoToAnalytics}
               >
                 <CardHeader className="flex flex-row items-center justify-between pb-3">
-                  <CardTitle className="text-sm font-semibold">Today's Score</CardTitle>
+                  <CardTitle className="text-sm font-semibold">{t('todaysScore')}</CardTitle>
                   <TrendingUp className="h-5 w-5 text-indigo-600" />
                 </CardHeader>
                 <CardContent>
@@ -765,6 +876,105 @@ const Dashboard: React.FC = () => {
             </Card>
           </div>
         </div>
+
+        {/* ── AI Study Plan Section ───────────────────────────────────────── */}
+        <Card className="rounded-2xl border border-border shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between pb-3">
+            <div className="flex items-center gap-2">
+              <Brain className="w-5 h-5 text-indigo-600" />
+              <CardTitle className="text-base font-semibold">{t('aiStudyPlan')}</CardTitle>
+              {studyPlanState.status === "success" && (
+                <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950 
+                                 text-emerald-700 dark:text-emerald-300 border border-emerald-200 
+                                 dark:border-emerald-800 font-medium">
+                  Generated
+                </span>
+              )}
+            </div>
+            {/* Collapse toggle */}
+            <button
+              onClick={() => setStudyPlanOpen((prev) => !prev)}
+              className="p-1 rounded-md hover:bg-muted transition"
+              aria-label={studyPlanOpen ? "Collapse study plan" : "Expand study plan"}
+            >
+              {studyPlanOpen
+                ? <ChevronUp className="w-4 h-4 text-muted-foreground" />
+                : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+            </button>
+          </CardHeader>
+
+          {studyPlanOpen && (
+            <CardContent>
+              {/* Error banner */}
+              {studyPlanState.status === "error" && (
+                <div className="mb-4 flex items-start gap-2 p-3 rounded-lg 
+                                bg-red-50 dark:bg-red-950/50 border border-red-200 
+                                dark:border-red-800 text-sm text-red-700 dark:text-red-300">
+                  <X className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                  <span>{studyPlanState.errorMessage}</span>
+                </div>
+              )}
+
+              {/* Show form when no plan is loaded (idle or error state) */}
+              {(studyPlanState.status === "idle" || studyPlanState.status === "error") && (
+                <StudyPlanForm
+                  onSubmit={handleGeneratePlan}
+                  isLoading={studyPlanState.status === "loading"}
+                />
+              )}
+
+              {/* Loading state */}
+              {studyPlanState.status === "loading" && (
+                <StudyPlanForm
+                  onSubmit={handleGeneratePlan}
+                  isLoading={true}
+                />
+              )}
+
+              {/* Render the plan when ready */}
+              {studyPlanState.status === "success" && studyPlanState.plan && (
+                <StudyPlanView
+                  plan={studyPlanState.plan}
+                  onRegenerate={() =>
+                    setStudyPlanState({ status: "idle", plan: null, errorMessage: null })
+                  }
+                  onClear={handleClearPlan}
+                  isLoading={false}
+                />
+              )}
+            </CardContent>
+          )}
+        </Card>
+        {/* ── End AI Study Plan Section ─────────────────────────────────────── */}
+
+        {/* ── Today's Reflection Section ───────────────────────────────────── */}
+        <Card className="rounded-2xl border border-border shadow-sm overflow-hidden">
+          <div className="bg-gradient-to-r from-indigo-500/5 to-purple-500/5 p-6 pb-0">
+            <div className="flex items-center gap-2 mb-1">
+              <Bolt className="w-5 h-5 text-amber-500" />
+              <CardTitle className="text-base font-semibold">{t('todaysReflection')}</CardTitle>
+            </div>
+            <p className="text-xs text-muted-foreground mb-4">
+              Close the day with a quick check-in to boost your study momentum.
+            </p>
+          </div>
+          
+          <CardContent className="pt-2">
+            {currentReflection ? (
+              <ReflectionView 
+                reflection={currentReflection} 
+                streak={streak}
+                onNew={() => setCurrentReflection(null)}
+              />
+            ) : (
+              <ReflectionForm 
+                onSubmit={handleReflectionSubmit} 
+                isLoading={reflectionLoading} 
+              />
+            )}
+          </CardContent>
+        </Card>
+        {/* ── End Today's Reflection Section ────────────────────────────────── */}
 
         {/* Bottom Action Bar */}
         <div className="fixed left-6 bottom-8 z-40">

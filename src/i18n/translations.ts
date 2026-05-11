@@ -1,0 +1,55 @@
+// src/i18n/translations.ts
+
+export const translations = {
+  en: {
+    dashboard: "Dashboard",
+    tasks: "Tasks",
+    goals: "Goals",
+    routineLogs: "Routine Logs",
+    recommendations: "Recommendations",
+    scheduler: "Scheduler",
+    analytics: "Analytics",
+    profile: "Profile",
+    aiStudyPlan: "AI Study Plan",
+    todaysReflection: "Today's Reflection",
+    lowDataMode: "Low-Data Mode",
+    language: "Language",
+    studyStreak: "Study Streak",
+    welcomeTitle: "Dashboard",
+    welcomeSub: "Your productivity overview",
+    addLog: "Add Log",
+    addTask: "Add Task",
+    askAI: "Ask AI",
+    todaysScore: "Today's Score",
+    avgSleep: "Avg Sleep",
+    avgStudy: "Avg Study",
+    avgExercise: "Avg Exercise",
+  },
+  hi: {
+    dashboard: "डैशबोर्ड",
+    tasks: "कार्य",
+    goals: "लक्ष्य",
+    routineLogs: "दिनचर्या लॉग",
+    recommendations: "सिफारिशें",
+    scheduler: "शेड्यूलर",
+    analytics: "विश्लेषण",
+    profile: "प्रोफाइल",
+    aiStudyPlan: "AI अध्ययन योजना",
+    todaysReflection: "आज का चिंतन",
+    lowDataMode: "लो-डेटा मोड",
+    language: "भाषा",
+    studyStreak: "अध्ययन सिलसिला",
+    welcomeTitle: "डैशबोर्ड",
+    welcomeSub: "आपकी उत्पादकता का विवरण",
+    addLog: "लॉग जोड़ें",
+    addTask: "कार्य जोड़ें",
+    askAI: "AI से पूछें",
+    todaysScore: "आज का स्कोर",
+    avgSleep: "औसत नींद",
+    avgStudy: "औसत अध्ययन",
+    avgExercise: "औसत व्यायाम",
+  }
+};
+
+export type Language = 'en' | 'hi';
+export type TranslationText = typeof translations.en;

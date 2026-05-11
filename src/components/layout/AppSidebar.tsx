@@ -22,20 +22,23 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { useSettings } from "@/contexts/SettingsContext";
+import { TranslationText } from "@/i18n/translations";
 
-const menuItems = [
-  { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
-  { title: "Tasks", url: "/tasks", icon: CheckSquare },
-  { title: "Goals", url: "/goals", icon: Target },
-  { title: "Routine Logs", url: "/routine-logs", icon: Calendar },
-  { title: "Recommendations", url: "/recommendations", icon: Lightbulb },
-  { title: "Scheduler", url: "/scheduler", icon: CalendarClock },
-  { title: "Analytics", url: "/analytics", icon: BarChart3 },
-  { title: "Profile", url: "/profile", icon: User },
+const menuItems: { title: keyof TranslationText; url: string; icon: any }[] = [
+  { title: "dashboard", url: "/dashboard", icon: LayoutDashboard },
+  { title: "tasks", url: "/tasks", icon: CheckSquare },
+  { title: "goals", url: "/goals", icon: Target },
+  { title: "routineLogs", url: "/routine-logs", icon: Calendar },
+  { title: "recommendations", url: "/recommendations", icon: Lightbulb },
+  { title: "scheduler", url: "/scheduler", icon: CalendarClock },
+  { title: "analytics", url: "/analytics", icon: BarChart3 },
+  { title: "profile", url: "/profile", icon: User },
 ];
 
 export function AppSidebar() {
   const { open } = useSidebar();
+  const { t } = useSettings();
   const location = useLocation();
   const currentPath = location.pathname;
 
@@ -71,7 +74,7 @@ export function AppSidebar() {
                       >
                         <item.icon className={`h-4 w-4 shrink-0 ${isActive ? "text-white" : ""}`} />
                         {open && (
-                          <span className="font-medium">{item.title}</span>
+                          <span className="font-medium">{t(item.title)}</span>
                         )}
                       </RouterNavLink>
                     </SidebarMenuButton>

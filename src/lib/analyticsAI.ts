@@ -1,6 +1,11 @@
 // src/lib/analyticsAI.ts (Robust - Gemini with safe fallback)
 // Note: Put your Gemini key in .env as VITE_GEMINI_API_KEY
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY ?? "";
+
+if (!GEMINI_API_KEY) {
+  console.warn("⚠️ VITE_GEMINI_API_KEY is missing from environment variables.");
+}
+
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
 
 export interface RoutineLog {

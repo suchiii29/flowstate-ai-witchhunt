@@ -1,9 +1,16 @@
 // src/lib/geminiAI.ts (SAFE QROQ VERSION)
 
 import OpenAI from "openai";
+const apiKey = import.meta.env.VITE_GROQ_API_KEY;
+
+if (!apiKey) {
+  console.warn("⚠️ VITE_GROQ_API_KEY is missing from environment variables.");
+}
+
 const client = new OpenAI({
-apiKey: import.meta.env.VITE_GROQ_API_KEY,
-baseURL: "https://api.groq.com/openai/v1",
+  apiKey: apiKey || "missing_key",
+  baseURL: "https://api.groq.com/openai/v1",
+  dangerouslyAllowBrowser: true,
 });
 export interface AIRecommendation {
   title: string;

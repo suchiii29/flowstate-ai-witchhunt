@@ -8,6 +8,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
+import { SettingsProvider } from "@/contexts/SettingsContext";
 
 // Pages
 import Index from "./pages/Index";
@@ -63,13 +64,15 @@ const App: React.FC = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
-        <AuthProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <AppContent />
-          </TooltipProvider>
-        </AuthProvider>
+        <SettingsProvider>
+          <AuthProvider>
+            <TooltipProvider>
+              <Toaster />
+              <Sonner />
+              <AppContent />
+            </TooltipProvider>
+          </AuthProvider>
+        </SettingsProvider>
       </ThemeProvider>
     </QueryClientProvider>
   );

@@ -1,6 +1,6 @@
 // src/lib/realtime.ts
 import { ref, push, set, update, remove, onValue, get, child } from "firebase/database";
-import { rtdb } from "@/firebase"; // adjust path if needed
+import { db } from "@/firebase"; // adjust path if needed
 import { getAuth } from "firebase/auth";
 
 /**
@@ -21,7 +21,7 @@ export async function addTask(uid: string, taskData: {
   priority?: number;
   status?: string;
 }) {
-  const tasksRef = ref(rtdb, `users/${uid}/tasks`);
+  const tasksRef = ref(db, `users/${uid}/tasks`);
   const newTaskRef = push(tasksRef);
   const payload = {
     ...taskData,
@@ -35,25 +35,25 @@ export async function addTask(uid: string, taskData: {
 
 // Update task
 export async function updateTask(uid: string, taskId: string, updates: any) {
-  const taskRef = ref(rtdb, `users/${uid}/tasks/${taskId}`);
+  const taskRef = ref(db, `users/${uid}/tasks/${taskId}`);
   await update(taskRef, { ...updates, updatedAt: Date.now() });
 }
 
 // Delete task
 export async function deleteTask(uid: string, taskId: string) {
-  const taskRef = ref(rtdb, `users/${uid}/tasks/${taskId}`);
+  const taskRef = ref(db, `users/${uid}/tasks/${taskId}`);
   await remove(taskRef);
 }
 
 // List tasks once
 export async function getTasksOnce(uid: string) {
-  const tasksSnap = await get(ref(rtdb, `users/${uid}/tasks`));
+  const tasksSnap = await get(ref(db, `users/${uid}/tasks`));
   return tasksSnap.exists() ? tasksSnap.val() : {};
 }
 
 // Subscribe to tasks (realtime)
 export function subscribeTasks(uid: string, callback: (data: any) => void) {
-  const tasksRef = ref(rtdb, `users/${uid}/tasks`);
+  const tasksRef = ref(db, `users/${uid}/tasks`);
   const unsub = onValue(tasksRef, (snapshot) => {
     callback(snapshot.exists() ? snapshot.val() : {});
   });
@@ -68,7 +68,7 @@ export async function logRoutine(uid: string, routine: {
   endISO: string;
   notes?: string;
 }) {
-  const routinesRef = ref(rtdb, `users/${uid}/routines`);
+  const routinesRef = ref(db, `users/${uid}/routines`);
   const newR = push(routinesRef);
   await set(newR, {
     ...routine,
@@ -80,10 +80,10 @@ export async function logRoutine(uid: string, routine: {
 
 // Recommendations and analytics can be stored similarly:
 export async function setRecommendations(uid: string, dateId: string, suggestions: any[]) {
-  const refNode = ref(rtdb, `users/${uid}/recommendations/${dateId}`);
+  const refNode = ref(db, `users/${uid}/recommendations/${dateId}`);
   await set(refNode, { generatedAt: Date.now(), suggestions });
 }
 
 export async function setAnalytics(uid: string, dateId: string, metrics: any) {
-  await set(ref(rtdb, `users/${uid}/analytics/${dateId}`), { generatedAt: Date.now(), metrics });
+  await set(ref(db, `users/${uid}/analytics/${dateId}`), { generatedAt: Date.now(), metrics });
 }
